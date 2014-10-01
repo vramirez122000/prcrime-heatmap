@@ -1,0 +1,60 @@
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'war'
+
+group = 'crime-heatmap'
+version = '0.1.1'
+
+description = 'Crime Heatmap'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+def groovyOptsClosure = {
+    groovyOptions.metaClass.optionMap = {
+        [indy: true, encoding: "UTF-8"]
+    }
+}
+
+compileGroovy(groovyOptsClosure)
+compileTestGroovy(groovyOptsClosure)
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+
+def springVersion = '4.1.+'
+def groovyVersion = '2.3.+'
+def jacksonVersion = '2.3.+'
+def postgresVersion = '9.3-1102-jdbc41'
+
+
+dependencies {
+    compile group: 'org.codehaus.groovy', name: 'groovy', version: groovyVersion, classifier: 'indy'
+    compile(group: 'org.codehaus.groovy', name: 'groovy-sql', version: groovyVersion, classifier: 'indy') {
+        exclude(module: 'groovy')
+    }
+    compile(group: 'org.postgis', name: 'postgis-jdbc', version: '1.3.3') {
+        exclude(module: 'postgis-stubs')
+    }
+
+    compile group: 'org.postgresql', name: 'postgresql', version: postgresVersion
+    compile group: 'com.jolbox', name: 'bonecp', version: '0.8.0.RELEASE'
+    compile(group: 'org.springframework', name: 'spring-webmvc', version: springVersion) {
+        exclude(module: 'commons-logging')
+    }
+    compile group: 'javax.servlet', name: 'jstl', version: '1.2'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.6'
+    runtime group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.1'
+    runtime group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.6'
+    providedCompile group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+}
+
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.12'
+}

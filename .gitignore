@@ -1,0 +1,8 @@
+# Created by .gitignore support plugin (hsz.mobi)
+### Gradle template
+.gradle
+build/
+.idea/
+crime-heatmap.iml
+
+

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Client Log</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css"/>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet-src.js"></script>
+    <script type="text/javascript" src="jslib/momentjs/moment.js"></script>
+    <script type="text/javascript" src="jslib/heatmap/src/heatmap.js"></script>
+    <script type="text/javascript" src="jslib/heatmap/src/heatmap-leaflet.js"></script>
+    <script type="text/javascript" src="jslib/heatmap/src/QuadTree.js"></script>
+
+    <script type="text/javascript">
+
+        var DEFAULTS = {
+            CENTER: [18.430189, -66.060061],
+            ZOOM: 13,
+            MIN_ZOOM: 10,
+            MAX_ZOOM: 19,
+            BOUNDS: [[18.352687, -66.179752],[18.477284, -65.928097]]
+        };
+
+        var map;
+        var heatmapLayer;
+
+        $(document).ready(function() {
+
+
+
+            map = L.map('map', {
+                center: DEFAULTS.CENTER,
+                zoom: DEFAULTS.ZOOM
+                });
+
+            var url = 'http://{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png'; //mapquest
+            L.tileLayer(url, {
+                minZoom: 10,
+                maxZoom: 18,
+                maxBounds: DEFAULTS.BOUNDS,
+                attribution: 'Tiles courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>, '
+                        + '<a href="http://www.openstreetmap.org/" target="_blank">OpenStreetMap Contributors</a>',
+                subdomains: ['otile1','otile2','otile3','otile4']
+            }).addTo(map);
+
+            $.getJSON('app/tipologia.json', function(data) {
+                var $incidentTypes = $('#incidentTypes');
+                $incidentTypes.attr('size', data.incidentTypes.length + 1);
+                for (var i = 0; i < data.incidentTypes.length; i++) {
+                    var incidentType = data.incidentTypes[i];
+                    var $option = $('<option></option>')
+                    $option.text(incidentType.name);
+                    $option.val(incidentType.name);
+                    $incidentTypes.append($option);
+                }
+            });
+
+
+            var $daysOfWeek = $('#daysOfWeek');
+            $daysOfWeek.attr('size', 7);
+            for (var i = 1; i < 8; i++) {
+                var day = moment().day(i);
+                var $option = $('<option></option>');
+                $option.text(day.format('dddd'));
+                $option.val(day.day());
+                $daysOfWeek.append($option);
+            }
+
+            updateHeatmap();
+            map.on('viewreset', function() {
+                updateHeatmap();
+            });
+            map.on('moveend', function() {
+                updateHeatmap();
+            })
+        });
+
+        function removeEmptyString(arrayOfStrings) {
+            var idx = arrayOfStrings.indexOf('');
+            if (idx > -1) {
+                arrayOfStrings.splice(idx, 1);
+            }
+        }
+        function updateHeatmap() {
+            var bounds = map.getBounds();
+            var daysOfWeek = $('#daysOfWeek').val();
+            removeEmptyString(daysOfWeek);
+
+
+            var incidentTypes = $('#incidentTypes').val();
+            removeEmptyString(incidentTypes);
+            var dataObj = {
+                bboxXmin: bounds.getSouthWest().lng,
+                bboxYmin: bounds.getSouthWest().lat,
+                bboxXmax: bounds.getNorthEast().lng,
+                bboxYmax: bounds.getNorthEast().lat,
+                daysOfWeek: daysOfWeek.length > 0 && daysOfWeek || null,
+                timeMin: $('#timeMin').val(),
+                timeMax: $('#timeMax').val(),
+                dateMin: $('#dateMin').val(),
+                dateMax: $('#dateMax').val(),
+                incidentTypes: incidentTypes.length > 0 && incidentTypes || null
+            };
+
+            $.ajax('app/incidentes.json', {
+                contentType: 'application/json; charset=UTF-8',
+                dataType: 'json',
+                method: 'POST',
+                data: JSON.stringify(dataObj),
+                success: function (data) {
+                    var newHeatmapLayer = L.TileLayer.heatMap({
+                        // radius could be absolute or relative
+                        // absolute: radius in meters, relative: radius in pixels
+                        radius: parseInt($('#heatRadius').val()),
+                        //radius: { value: 20, absolute: false },
+                        opacity: 0.8,
+                        gradient: {
+                            0.45: "rgb(0,0,255)",
+                            0.55: "rgb(0,255,255)",
+                            0.65: "rgb(0,255,0)",
+                            0.95: "yellow",
+                            1.0: "rgb(255,0,0)"
+                        }
+                    });
+
+                    var dataSet = [];
+                    for (var i = 0; i < data.geometries.length; i++) {
+                        var coords = data.geometries[i].coordinates;
+                        dataSet.push({
+                            lat: coords[1],
+                            lon: coords[0],
+                            value: 1
+                        })
+                    }
+                    newHeatmapLayer.setData(dataSet);
+                    if(heatmapLayer) {
+                        map.removeLayer(heatmapLayer);
+                    }
+                    heatmapLayer = newHeatmapLayer;
+                    newHeatmapLayer.addTo(map);
+
+                }
+            });
+        }
+    </script>
+
+</head>
+<body>
+<table style="width: 100%">
+    <tr>
+        <td style="width: 20%; height: 800px; vertical-align: top">
+            <h2>Puerto Rico Crime Heatmap</h2>
+            <fieldset>
+                <table>
+                    <tr>
+                        <td><label for="incidentTypes">Tipo de incidente</label></td>
+                        <td>
+                            <select id="incidentTypes" multiple>
+                                <option value="" selected>-- Todos --</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="dateMin">Fecha m&iacute;nima</label></td>
+                        <td><input type="date" id="dateMin"/></td>
+                    </tr>
+                    <tr>
+                        <td><label for="dateMax">Fecha m&aacute;xima</label></td>
+                        <td><input type="date" id="dateMax"/></td>
+                    </tr>
+                    <tr>
+                        <td><label for="timeMin">Hora m&iacute;nima</label></td>
+                        <td><input type="time" id="timeMin"/></td>
+                    </tr>
+                    <tr>
+                        <td><label for="timeMax">Hora m&aacute;xima</label></td>
+                        <td><input type="time" id="timeMax"/></td>
+                    </tr>
+                    <tr>
+                        <td><label for="daysOfWeek">D&iacute;a de la semana</label></td>
+                        <td>
+                            <select id="daysOfWeek" multiple>
+                                <option value="" selected>-- Todos --</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="heatRadius">Radio</label></td>
+                        <td><input type="range" id="heatRadius" min="1" max="20" value="5"/></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td><button type="button" onclick="updateHeatmap()">Filtrar Incidentes!</button></td>
+                    </tr>
+                </table>
+
+            </fieldset>
+        </td>
+        <td style="width: 80%">
+            <div id="map" style="width: 100%; height: 800px;"></div>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

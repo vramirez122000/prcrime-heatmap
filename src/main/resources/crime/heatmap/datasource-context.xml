@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="dataSource" class="com.jolbox.bonecp.BoneCPDataSource" destroy-method="close">
+        <property name="driverClass" value="org.postgis.DriverWrapper"/>
+        <property name="jdbcUrl" value="jdbc:postgresql_postGIS:crime_heatmap"/>
+        <property name="username" value="postgres"/>
+        <property name="password" value=""/>
+        <property name="logStatementsEnabled" value="true"/>
+    </bean>
+
+</beans>
