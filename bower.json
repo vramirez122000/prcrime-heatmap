@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "dependencies": {
         "momentjs": "~2.5",
-        "heatmap": "https://github.com/pa7/heatmap.js/archive/master.zip"
+        "heatmap": "https://github.com/pa7/heatmap.js/archive/v2.0.zip"
     },
     "devDependencies": {}
 }

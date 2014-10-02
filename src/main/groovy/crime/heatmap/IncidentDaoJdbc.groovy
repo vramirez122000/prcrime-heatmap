@@ -42,7 +42,7 @@ class IncidentDaoJdbc {
         }
 
         //queryBuilder.whereBetween('hora_incidente', criteria.timeMin?:'00:00:00', criteria.timeMax?:'11:59:59')
-        queryBuilder.limit(500)
+        queryBuilder.limit(1000)
 
         sql.eachRow(queryBuilder.sql(), queryBuilder.values(), {row ->
             if(first) {

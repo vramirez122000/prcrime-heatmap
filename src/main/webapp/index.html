@@ -3,7 +3,7 @@
 <head>
     <title>Client Log</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.css"/>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
     <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet-src.js"></script>
     <script type="text/javascript" src="jslib/momentjs/moment.js"></script>
@@ -20,12 +20,30 @@
             BOUNDS: [[18.352687, -66.179752],[18.477284, -65.928097]]
         };
 
+        var cfg = {
+            // radius should be small ONLY if scaleRadius is true (or small radius is intended)
+            // if scaleRadius is false it will be the constant radius used in pixels
+            radius: 0.001,
+            blur: 0.90,
+            maxOpacity: .8,
+            // scales the radius based on map zoom
+            scaleRadius: true,
+            // if set to false the heatmap uses the global maximum for colorization
+            // if activated: uses the data maximum within the current map boundaries
+            //   (there will always be a red spot with useLocalExtremas true)
+            useLocalExtrema: true,
+            // which field name in your data represents the latitude - default "lat"
+            latField: 'lat',
+            // which field name in your data represents the longitude - default "lng"
+            lngField: 'lng',
+            // which field name in your data represents the data value - default "value"
+            valueField: 'count'
+        };
+
         var map;
         var heatmapLayer;
 
         $(document).ready(function() {
-
-
 
             map = L.map('map', {
                 center: DEFAULTS.CENTER,
@@ -34,8 +52,8 @@
 
             var url = 'http://{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png'; //mapquest
             L.tileLayer(url, {
-                minZoom: 10,
-                maxZoom: 18,
+                minZoom: DEFAULTS.MIN_ZOOM,
+                maxZoom: DEFAULTS.MAX_ZOOM,
                 maxBounds: DEFAULTS.BOUNDS,
                 attribution: 'Tiles courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>, '
                         + '<a href="http://www.openstreetmap.org/" target="_blank">OpenStreetMap Contributors</a>',
@@ -47,7 +65,7 @@
                 $incidentTypes.attr('size', data.incidentTypes.length + 1);
                 for (var i = 0; i < data.incidentTypes.length; i++) {
                     var incidentType = data.incidentTypes[i];
-                    var $option = $('<option></option>')
+                    var $option = $('<option></option>');
                     $option.text(incidentType.name);
                     $option.val(incidentType.name);
                     $incidentTypes.append($option);
@@ -71,7 +89,7 @@
             });
             map.on('moveend', function() {
                 updateHeatmap();
-            })
+            });
         });
 
         function removeEmptyString(arrayOfStrings) {
@@ -80,6 +98,7 @@
                 arrayOfStrings.splice(idx, 1);
             }
         }
+
         function updateHeatmap() {
             var bounds = map.getBounds();
             var daysOfWeek = $('#daysOfWeek').val();
@@ -107,37 +126,31 @@
                 method: 'POST',
                 data: JSON.stringify(dataObj),
                 success: function (data) {
-                    var newHeatmapLayer = L.TileLayer.heatMap({
-                        // radius could be absolute or relative
-                        // absolute: radius in meters, relative: radius in pixels
-                        radius: parseInt($('#heatRadius').val()),
-                        //radius: { value: 20, absolute: false },
-                        opacity: 0.8,
-                        gradient: {
-                            0.45: "rgb(0,0,255)",
-                            0.55: "rgb(0,255,255)",
-                            0.65: "rgb(0,255,0)",
-                            0.95: "yellow",
-                            1.0: "rgb(255,0,0)"
-                        }
-                    });
+
+                    cfg.radius = parseInt($('#heatRadius').val()) * 0.0001;
+                    cfg.blur = parseInt($('#blur').val()) * 0.01;
+                    var newHeatmapLayer = new HeatmapOverlay(cfg);
 
                     var dataSet = [];
                     for (var i = 0; i < data.geometries.length; i++) {
                         var coords = data.geometries[i].coordinates;
                         dataSet.push({
                             lat: coords[1],
-                            lon: coords[0],
-                            value: 1
+                            lng: coords[0],
+                            count: 1
                         })
                     }
-                    newHeatmapLayer.setData(dataSet);
+
                     if(heatmapLayer) {
                         map.removeLayer(heatmapLayer);
                     }
                     heatmapLayer = newHeatmapLayer;
-                    newHeatmapLayer.addTo(map);
+                    map.addLayer(newHeatmapLayer);
 
+                    newHeatmapLayer.setData({
+                        max: 1,
+                        data: dataSet
+                    });
                 }
             });
         }
@@ -185,8 +198,13 @@
                     </tr>
                     <tr>
                         <td><label for="heatRadius">Radio</label></td>
-                        <td><input type="range" id="heatRadius" min="1" max="20" value="5"/></td>
+                        <td><input type="range" id="heatRadius" min="1" max="50" value="10"/></td>
                     </tr>
+                    <tr>
+                        <td><label for="blur">Blur</label></td>
+                        <td><input type="range" id="blur" min="0" max="100" value="85"/></td>
+                    </tr>
+
                     <tr>
                         <td></td>
                         <td><button type="button" onclick="updateHeatmap()">Filtrar Incidentes!</button></td>
