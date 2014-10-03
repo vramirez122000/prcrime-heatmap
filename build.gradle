@@ -23,6 +23,9 @@ compileTestGroovy(groovyOptsClosure)
 repositories {
     mavenLocal()
     mavenCentral()
+    /*maven {
+        url 'http://snapshots.repository.codehaus.org'
+    }*/
 }
 
 
@@ -34,12 +37,14 @@ def postgresVersion = '9.3-1102-jdbc41'
 
 dependencies {
     compile group: 'org.codehaus.groovy', name: 'groovy', version: groovyVersion, classifier: 'indy'
-    compile(group: 'org.codehaus.groovy', name: 'groovy-sql', version: groovyVersion, classifier: 'indy') {
-        exclude(module: 'groovy')
-    }
+    compile(group: 'org.codehaus.groovy', name: 'groovy-sql', version: groovyVersion, classifier: 'indy', transitive: false)
+    runtime(group: 'org.codehaus.groovy', name: 'groovy-xml', version: groovyVersion, classifier: 'indy', transitive: false)
+    runtime(group: 'org.codehaus.groovy', name: 'groovy-json', version: groovyVersion, classifier: 'indy', transitive: false)
+    compile(group: 'org.codehaus.groovy.modules.http-builder', name: 'http-builder', version: '0.7.+')
     compile(group: 'org.postgis', name: 'postgis-jdbc', version: '1.3.3') {
         exclude(module: 'postgis-stubs')
     }
+    compile group: 'de.grundid.opendatalab', name: 'geojson-jackson', version: '1.2'
 
     compile group: 'org.postgresql', name: 'postgresql', version: postgresVersion
     compile group: 'com.jolbox', name: 'bonecp', version: '0.8.0.RELEASE'

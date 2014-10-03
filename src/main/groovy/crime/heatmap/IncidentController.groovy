@@ -1,12 +1,10 @@
 package crime.heatmap
 
+import org.geojson.GeometryCollection
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseBody
-
-import javax.servlet.http.HttpServletResponse
+import org.springframework.web.bind.annotation.RestController
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,22 +13,18 @@ import javax.servlet.http.HttpServletResponse
  * Time: 11:32 AM
  * To change this template use File | Settings | File Templates.
  */
-@Controller
+@RestController
 class IncidentController {
 
     @Autowired
     private IncidentDaoJdbc incidentDao;
 
     @RequestMapping('/incidentes.json')
-    void getIncidents(@RequestBody IncidentCriteria criteria,
-                      HttpServletResponse response) {
-        response.setContentType("application/json")
-        String json = incidentDao.getIncidentsAsGeoJson(criteria)
-        response.getWriter().write(json)
+    GeometryCollection getIncidents(@RequestBody IncidentCriteria criteria) {
+        return incidentDao.getIncidentsAsGeoJson(criteria)
     }
 
     @RequestMapping('/tipologia.json')
-    @ResponseBody
     def getIncidentTypes() {
         return [
                 incidentTypes: IncidentType.values().collect { t ->
