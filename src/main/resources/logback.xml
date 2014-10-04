@@ -9,6 +9,7 @@
     <logger name="org.springframework.web.servlet.mvc" level="info"/>
     <logger name="org.springframework" level="info"/>
     <logger name="com.jolbox.bonecp" level="debug"/>
+    <logger name="crime.heatmap" level="debug"/>
 
     <root level="warn">
         <appender-ref ref="STDOUT"/>

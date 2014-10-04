@@ -24,7 +24,7 @@ enum IncidentType {
         this.code = code
     }
 
-    public getCode() {
+    public int getCode() {
         return this.code;
     }
 
@@ -34,6 +34,10 @@ enum IncidentType {
                 return t;
             }
         }
+    }
+
+    static IncidentType forCodeString(String code) {
+        forCode(Integer.parseInt(code))
     }
 }
 

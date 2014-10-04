@@ -19,6 +19,7 @@
     <import resource="classpath:crime/heatmap/datasource-context.xml"/>
     <bean class="crime.heatmap.IncidentController"/>
     <bean id="incidentDao" class="crime.heatmap.IncidentDaoJdbc"/>
+    <!--<bean id="socrataService" class="crime.heatmap.SocrataService"/>-->
     <bean id="socrataService" class="crime.heatmap.SocrataService"/>
     <bean id="updateTasks" class="crime.heatmap.UpdateTasks"/>
 

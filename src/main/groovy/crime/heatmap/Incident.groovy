@@ -1,6 +1,9 @@
 package crime.heatmap
 
+import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 /**
  * Created by victor on 10/3/14.
@@ -8,7 +11,10 @@ import java.time.LocalDateTime
 class Incident {
 
     IncidentType incidentType
-    LocalDateTime dateTime
-    float lat
-    float lng
+    Instant tstamp
+    String date
+    String time
+    String lat
+    String lng
+    boolean needsRecoding
 }

@@ -1,6 +1,6 @@
 package crime.heatmap
 
-import org.geojson.GeometryCollection
+import org.geojson.FeatureCollection
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -20,7 +20,7 @@ class IncidentController {
     private IncidentDaoJdbc incidentDao;
 
     @RequestMapping('/incidentes.json')
-    GeometryCollection getIncidents(@RequestBody IncidentCriteria criteria) {
+    FeatureCollection getIncidents(@RequestBody IncidentCriteria criteria) {
         return incidentDao.getIncidentsAsGeoJson(criteria)
     }
 

@@ -2,6 +2,8 @@ package crime.heatmap
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import groovy.sql.Sql
+import org.geojson.Feature
+import org.geojson.FeatureCollection
 import org.geojson.GeometryCollection
 import org.geojson.Point
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,8 +11,8 @@ import org.springframework.stereotype.Repository
 
 import javax.sql.DataSource
 import java.sql.Time
+import java.sql.Timestamp
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Repository
 class IncidentDaoJdbc {
@@ -23,9 +25,9 @@ class IncidentDaoJdbc {
         this.sql = new Sql(dataSource);
     }
 
-    GeometryCollection getIncidentsAsGeoJson(IncidentCriteria criteria) {
-        CriteriaQueryBuilder queryBuilder = new CriteriaQueryBuilder('select st_asgeojson(location) json from incidencia ')
-        if(criteria.bboxXmax != null && criteria.bboxXmin != null && criteria.bboxYmax != null && criteria.bboxYmin != null) {
+    FeatureCollection getIncidentsAsGeoJson(IncidentCriteria criteria) {
+        CriteriaQueryBuilder queryBuilder = new CriteriaQueryBuilder('select fecha_incidente, st_asgeojson(location) json from incidencia ')
+        if (criteria.bboxXmax != null && criteria.bboxXmin != null && criteria.bboxYmax != null && criteria.bboxYmin != null) {
             queryBuilder.whereClause('incidencia.location && st_makeenvelope(?, ?, ?, ?)',
                     criteria.bboxXmin,
                     criteria.bboxYmin,
@@ -34,49 +36,63 @@ class IncidentDaoJdbc {
             )
         }
 
-        if(criteria.incidentTypes != null) {
+        if (criteria.incidentTypes != null) {
             def incidentTypeCodes = criteria.incidentTypes.collect { it ->
                 it.code
             }
             queryBuilder.whereIn('delito', incidentTypeCodes.toArray(new Integer[incidentTypeCodes.size()]))
         }
 
-        if(criteria.daysOfWeek != null) {
-            queryBuilder.whereClause("extract(dow from fecha_incidente) in ( ${(['?']*criteria.daysOfWeek.size()).join(',')} )",
+        if (criteria.daysOfWeek != null) {
+            queryBuilder.whereClause("extract(dow from fecha_incidente) in ( ${(['?'] * criteria.daysOfWeek.size()).join(',')} )",
                     criteria.daysOfWeek.toArray(new Integer[criteria.daysOfWeek.size()]))
         }
 
-        if(criteria.timeMin || criteria.timeMax) {
-            if(criteria.timeMin) {
+        if (criteria.timeMin || criteria.timeMax) {
+            if (criteria.timeMin) {
                 criteria.timeMin += ':00'
             }
-            if(criteria.timeMax) {
+            if (criteria.timeMax) {
                 criteria.timeMax += ':59'
             }
 
             queryBuilder.whereBetween(
                     'hora_incidente',
-                    Time.valueOf(criteria.timeMin?:'00:00:00'),
-                    Time.valueOf(criteria.timeMax?:'23:59:59')
+                    Time.valueOf(criteria.timeMin ?: '00:00:00'),
+                    Time.valueOf(criteria.timeMax ?: '23:59:59')
             )
         }
+
+        queryBuilder.orderBy('fecha_incidente', true)
         queryBuilder.limit(2000)
 
-        def geomCollection = new GeometryCollection()
-        sql.eachRow(queryBuilder.sql(), queryBuilder.values(), {row ->
-            geomCollection.add(objectMapper.readValue((String) row.json, Point.class))
+        def featureCollection = new FeatureCollection()
+        sql.eachRow(queryBuilder.sql(), queryBuilder.values(), { row ->
+            def f = new Feature()
+            f.geometry = objectMapper.readValue((String) row.json, Point.class)
+            f.setProperty('date', ((java.sql.Date)row.fecha_incidente)?.toLocalDate()?.toString())
+            featureCollection.add(f)
         })
-        return geomCollection
+        return featureCollection
     }
 
     LocalDateTime getMaxDate() {
-        def row = sql.firstRow("select max((fecha_incidente || ' ' || hora_incidente) :: timestamp) as max_date from incidencia")
-        return ((java.sql.Timestamp)row.max_date).toLocalDateTime()
+        def row = sql.firstRow("SELECT max(tstamp) AS max_date FROM incidencia")
+        return row.max_date ? ((Timestamp) row.max_date).toLocalDateTime() : null
     }
 
     void insert(Incident incident) {
-        println incident
-        //sql.executeInsert()
+        def params = incident.properties
+        params.incidenTypeCode = incident.incidentType.code
+        params.tstamp = new Timestamp(incident.tstamp.toEpochMilli())
+        params.latFloat = Double.parseDouble(incident.lat)
+        params.lngFloat = Double.parseDouble(incident.lng)
+        sql.executeInsert('''INSERT INTO incidencia
+            (fecha_incidente, hora_incidente, delito, location, needs_recoding, latitude, longitude, tstamp)
+            values (:date :: date, :time :: time, :incidenTypeCode,
+            st_snaptogrid(ST_SetSRID(ST_Point(:lngFloat, :latFloat), 4326), 0.000001),
+            :needsRecoding, :lat, :lng, :tstamp)
+        ''', params)
     }
 
 }

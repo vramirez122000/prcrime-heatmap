@@ -23,6 +23,8 @@
         var cfg = {
             maxOpacity: 1,
             // scales the radius based on map zoom
+            radius: 1,
+            blur: 0.85,
             scaleRadius: true,
             // if set to false the heatmap uses the global maximum for colorization
             // if activated: uses the data maximum within the current map boundaries
@@ -124,12 +126,17 @@
                 success: function (data) {
 
                     cfg.radius = parseInt($('#heatRadius').val()) * 0.0001;
-                    cfg.blur = parseInt($('#blur').val()) * 0.01;
+                    cfg.useLocalExtrema = $('#useLocalExtrema').prop('checked');
                     var newHeatmapLayer = new HeatmapOverlay(cfg);
 
                     var dataSet = [];
-                    for (var i = 0; i < data.geometries.length; i++) {
-                        var coords = data.geometries[i].coordinates;
+                    if(data.features.length > 0) {
+                        $('#resultFechaMin').text(data.features[0].properties.date)
+                        $('#resultFechaMax').text(data.features[data.features.length - 1].properties.date)
+                    }
+
+                    for (var i = 0; i < data.features.length; i++) {
+                        var coords = data.features[i].geometry.coordinates;
                         dataSet.push({
                             lat: coords[1],
                             lng: coords[0]
@@ -196,10 +203,9 @@
                         <td><input type="range" id="heatRadius" min="1" max="50" value="10"/></td>
                     </tr>
                     <tr>
-                        <td><label for="blur">Blur</label></td>
-                        <td><input type="range" id="blur" min="0" max="100" value="85"/></td>
+                        <td><label for="maxima">Use Local Extrema</label></td>
+                        <td><input type="checkbox" id="useLocalExtrema" checked/></td>
                     </tr>
-
                     <tr>
                         <td><label for="maxima">M&aacute;xima</label></td>
                         <td><input type="number" id="maxima" min="1" max="100" value="1"/></td>
@@ -208,6 +214,15 @@
                     <tr>
                         <td></td>
                         <td><button type="button" onclick="updateHeatmap()">Filtrar Incidentes!</button></td>
+                    </tr>
+
+                    <tr>
+                        <td>Fecha min</td>
+                        <td id="resultFechaMin"></td>
+                    </tr>
+                    <tr>
+                        <td>Fecha max</td>
+                        <td id="resultFechaMax"></td>
                     </tr>
                 </table>
 
