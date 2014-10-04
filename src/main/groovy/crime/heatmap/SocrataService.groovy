@@ -25,8 +25,7 @@ class SocrataService {
 
     private Soda2Consumer consumer = Soda2Consumer.newConsumer("https://data.pr.gov")
 
-    void getIncidentsLaterThanDate(LocalDateTime maxDate, Closure successHandler) {
-
+    int getIncidentsLaterThanDate(LocalDateTime maxDate, Closure successHandler) {
 
         //To get a raw String of the results
         ClientResponse response = consumer.query('incidencia-crime-map',
@@ -65,5 +64,7 @@ class SocrataService {
             }
             successHandler(incident)
         }
+        return json.size()
+
     }
 }

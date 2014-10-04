@@ -21,9 +21,13 @@ class UpdateTasks {
 
     @Scheduled(fixedDelay = 3_600_000L)
     void update() {
-        LocalDateTime maxDate = incidentDao.getMaxDate()
-        socrataService.getIncidentsLaterThanDate(maxDate) { Incident incident ->
-            incidentDao.insert(incident)
+        int count = 1000
+        while (count == 1000) {
+            LocalDateTime maxDate = incidentDao.getMaxDate()
+            count = socrataService.getIncidentsLaterThanDate(maxDate) { Incident incident ->
+                incidentDao.insert(incident)
+            }
+            println count
         }
     }
 }

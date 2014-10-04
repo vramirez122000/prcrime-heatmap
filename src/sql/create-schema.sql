@@ -9,4 +9,4 @@ create table incidencia (
   tstamp timestamp
 );
 
-AddGeometryColumn('incidencia', 'location', 4326, 'Point');
+select AddGeometryColumn('incidencia', 'location', 4326, 'Point', 2);
