@@ -12,5 +12,6 @@ class IncidentCriteria {
     Date dateMin
     Date dateMax
     List<Integer> daysOfWeek = new ArrayList<>(7)
+    Integer limit
 
 }

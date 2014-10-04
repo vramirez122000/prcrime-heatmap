@@ -43,6 +43,14 @@ class IncidentDaoJdbc {
             queryBuilder.whereIn('delito', incidentTypeCodes.toArray(new Integer[incidentTypeCodes.size()]))
         }
 
+        if(criteria.dateMin) {
+            queryBuilder.whereGreaterOrEquals('fecha_incidente', new java.sql.Date(criteria.dateMin.time))
+        }
+
+        if(criteria.dateMax) {
+            queryBuilder.whereLessOrEquals('fecha_incidente', new java.sql.Date(criteria.dateMax.time))
+        }
+
         if (criteria.daysOfWeek != null) {
             queryBuilder.whereClause("extract(dow from fecha_incidente) in ( ${(['?'] * criteria.daysOfWeek.size()).join(',')} )",
                     criteria.daysOfWeek.toArray(new Integer[criteria.daysOfWeek.size()]))
@@ -64,7 +72,7 @@ class IncidentDaoJdbc {
         }
 
         queryBuilder.orderBy('fecha_incidente', true)
-        queryBuilder.limit(2000)
+        queryBuilder.limit(criteria.limit ?: 2000)
 
         def featureCollection = new FeatureCollection()
         sql.eachRow(queryBuilder.sql(), queryBuilder.values(), { row ->

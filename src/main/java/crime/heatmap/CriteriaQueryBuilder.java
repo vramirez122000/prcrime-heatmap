@@ -52,6 +52,16 @@ class CriteriaQueryBuilder {
         return this;
     }
 
+    public CriteriaQueryBuilder whereLessOrEquals(String param, Object value) {
+        if (value == null) {
+            return this;
+        }
+        checkAppendWhere();
+        query.append(param).append("<=? and ");
+        values.add(value);
+        return this;
+    }
+
     public CriteriaQueryBuilder whereOrEquals(String param, Object value) {
         if (value == null) {
             return this;

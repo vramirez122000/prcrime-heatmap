@@ -105,7 +105,7 @@
 
             var incidentTypes = $('#incidentTypes').val();
             removeEmptyString(incidentTypes);
-            var dataObj = {
+            var criteria = {
                 bboxXmin: bounds.getSouthWest().lng,
                 bboxYmin: bounds.getSouthWest().lat,
                 bboxXmax: bounds.getNorthEast().lng,
@@ -115,14 +115,15 @@
                 timeMax: $('#timeMax').val(),
                 dateMin: $('#dateMin').val(),
                 dateMax: $('#dateMax').val(),
-                incidentTypes: incidentTypes.length > 0 && incidentTypes || null
+                incidentTypes: incidentTypes.length > 0 && incidentTypes || null,
+                limit: $('#limit').val()
             };
 
             $.ajax('app/incidentes.json', {
                 contentType: 'application/json; charset=UTF-8',
                 dataType: 'json',
                 method: 'POST',
-                data: JSON.stringify(dataObj),
+                data: JSON.stringify(criteria),
                 success: function (data) {
 
                     cfg.radius = parseInt($('#heatRadius').val()) * 0.0001;
@@ -131,8 +132,8 @@
 
                     var dataSet = [];
                     if(data.features.length > 0) {
-                        $('#resultFechaMin').text(data.features[0].properties.date)
-                        $('#resultFechaMax').text(data.features[data.features.length - 1].properties.date)
+                        $('#resultFechaMin').text(data.features[data.features.length - 1].properties.date)
+                        $('#resultFechaMax').text(data.features[0].properties.date)
                     }
 
                     for (var i = 0; i < data.features.length; i++) {
@@ -149,10 +150,14 @@
                     heatmapLayer = newHeatmapLayer;
                     map.addLayer(newHeatmapLayer);
 
-                    newHeatmapLayer.setData({
-                        max: parseInt($('#maxima').val()),
+                    var heatMapData = {
                         data: dataSet
-                    });
+                    };
+                    if (!criteria.useLocalExtrema) {
+                        heatMapData.max = parseInt($('#maxima').val());
+                    }
+
+                    newHeatmapLayer.setData(heatMapData);
                 }
             });
         }
@@ -179,8 +184,16 @@
                         <td><input type="date" id="dateMin"/></td>
                     </tr>
                     <tr>
+                        <td></td>
+                        <td id="resultFechaMin">&nbsp;</td>
+                    </tr>
+                    <tr>
                         <td><label for="dateMax">Fecha m&aacute;xima</label></td>
                         <td><input type="date" id="dateMax"/></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td id="resultFechaMax">&nbsp;</td>
                     </tr>
                     <tr>
                         <td><label for="timeMin">Hora m&iacute;nima</label></td>
@@ -200,30 +213,27 @@
                     </tr>
                     <tr>
                         <td><label for="heatRadius">Radio</label></td>
-                        <td><input type="range" id="heatRadius" min="1" max="50" value="10"/></td>
+                        <td><input type="range" id="heatRadius" min="1" max="200" value="10"/></td>
                     </tr>
                     <tr>
-                        <td><label for="maxima">Use Local Extrema</label></td>
-                        <td><input type="checkbox" id="useLocalExtrema" checked/></td>
+                        <td><label for="useLocalExtrema">Use Local Extrema</label></td>
+                        <td><input type="checkbox" id="useLocalExtrema" checked onclick="$('#maxima').prop('disabled', this.checked)"/></td>
                     </tr>
                     <tr>
                         <td><label for="maxima">M&aacute;xima</label></td>
-                        <td><input type="number" id="maxima" min="1" max="100" value="1"/></td>
+                        <td><input type="number" id="maxima" min="1" max="100" value="1" disabled/></td>
+                    </tr>
+                    <tr>
+                        <td><label for="limit">L&iacute;mite Records</label></td>
+                        <td><input id="limit" type="number" value="2000" min="1000" max="20000" maxlength="5" step="1000"></td>
                     </tr>
 
                     <tr>
                         <td></td>
-                        <td><button type="button" onclick="updateHeatmap()">Filtrar Incidentes!</button></td>
+                        <td><button type="button" onclick="updateHeatmap()">Actualizar Mapa!</button></td>
                     </tr>
 
-                    <tr>
-                        <td>Fecha min</td>
-                        <td id="resultFechaMin"></td>
-                    </tr>
-                    <tr>
-                        <td>Fecha max</td>
-                        <td id="resultFechaMax"></td>
-                    </tr>
+
                 </table>
 
             </fieldset>
