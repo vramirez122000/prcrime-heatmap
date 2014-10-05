@@ -212,20 +212,20 @@
                         </td>
                     </tr>
                     <tr>
-                        <td><label for="heatRadius">Radio</label></td>
+                        <td><label for="heatRadius">Radio Calor</label></td>
                         <td><input type="range" id="heatRadius" min="1" max="200" value="10"/></td>
                     </tr>
                     <tr>
-                        <td><label for="useLocalExtrema">Use Local Extrema</label></td>
-                        <td><input type="checkbox" id="useLocalExtrema" checked onclick="$('#maxima').prop('disabled', this.checked)"/></td>
-                    </tr>
-                    <tr>
-                        <td><label for="maxima">M&aacute;xima</label></td>
-                        <td><input type="number" id="maxima" min="1" max="100" value="1" disabled/></td>
+                        <td><label for="maxima">Densidad M&aacute;xima</label></td>
+                        <td>
+                            <input type="number" id="maxima" min="1" max="100" value="1" disabled/>
+                            <input type="checkbox" id="useLocalExtrema" checked onclick="$('#maxima').prop('disabled', this.checked)"/>
+                            <label for="useLocalExtrema">Relativa</label>
+                        </td>
                     </tr>
                     <tr>
                         <td><label for="limit">L&iacute;mite Records</label></td>
-                        <td><input id="limit" type="number" value="2000" min="1000" max="20000" maxlength="5" step="1000"></td>
+                        <td><input id="limit" type="number" value="5000" min="1000" max="50000" maxlength="5" step="1000"></td>
                     </tr>
 
                     <tr>
