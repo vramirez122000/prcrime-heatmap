@@ -4,6 +4,7 @@
     <title>Puerto Rico Crime Heatmap</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
     <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet-src.js"></script>
     <script type="text/javascript" src="jslib/momentjs/moment.js"></script>
@@ -22,9 +23,9 @@
 
         var cfg = {
             maxOpacity: 1,
-            // scales the radius based on map zoom
-            radius: 1,
             blur: 0.85,
+            radius: 1,
+            // scales the radius based on map zoom
             scaleRadius: true,
             // if set to false the heatmap uses the global maximum for colorization
             // if activated: uses the data maximum within the current map boundaries
@@ -126,14 +127,17 @@
                 data: JSON.stringify(criteria),
                 success: function (data) {
 
-                    cfg.radius = parseInt($('#heatRadius').val()) * 0.0001;
-                    cfg.useLocalExtrema = $('#useLocalExtrema').prop('checked');
-                    var newHeatmapLayer = new HeatmapOverlay(cfg);
+                    var newCfg = jQuery.extend({}, cfg);
+                    newCfg.scaleRadius = !$('#scaleRadius').prop('checked');
+                    newCfg.radius = parseInt($('#heatRadius').val()) * (newCfg.scaleRadius && 0.001 || 10);
+                    newCfg.useLocalExtrema = $('#useLocalExtrema').prop('checked');
+                    var newHeatmapLayer = new HeatmapOverlay(newCfg);
 
                     var dataSet = [];
                     if(data.features.length > 0) {
-                        $('#resultFechaMin').text(data.features[data.features.length - 1].properties.date)
-                        $('#resultFechaMax').text(data.features[0].properties.date)
+                        $('#resultFechaMin').text(data.features[data.features.length - 1].properties.date);
+                        $('#resultFechaMax').text(data.features[0].properties.date);
+                        $('#totalIncidents').text(data.features.length);
                     }
 
                     for (var i = 0; i < data.features.length; i++) {
@@ -165,83 +169,105 @@
 
 </head>
 <body>
-<table style="width: 100%">
-    <tr>
-        <td style="width: 20%; vertical-align: top">
-            <h2>Puerto Rico Crime Heatmap</h2>
-            <fieldset>
-                <table>
-                    <tr>
-                        <td><label for="incidentTypes">Tipo de incidente</label></td>
-                        <td>
-                            <select id="incidentTypes" multiple>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3">
+            <h3>Puerto Rico Crime Heatmap</h3>
+            <form class="form-horizontal" role="form">
+                <fieldset>
+                    <div class="form-group">
+                        <label for="incidentTypes" class="control-label col-md-5">Tipo de incidente</label>
+                        <div class="col-md-7">
+                            <select id="incidentTypes" multiple class="form-control">
                                 <option value="" selected>-- Todos --</option>
                             </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><label for="dateMin">Fecha m&iacute;nima</label></td>
-                        <td><input type="date" id="dateMin"/></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td id="resultFechaMin">&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td><label for="dateMax">Fecha m&aacute;xima</label></td>
-                        <td><input type="date" id="dateMax"/></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td id="resultFechaMax">&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td><label for="timeMin">Hora m&iacute;nima</label></td>
-                        <td><input type="time" id="timeMin"/></td>
-                    </tr>
-                    <tr>
-                        <td><label for="timeMax">Hora m&aacute;xima</label></td>
-                        <td><input type="time" id="timeMax"/></td>
-                    </tr>
-                    <tr>
-                        <td><label for="daysOfWeek">D&iacute;a de la semana</label></td>
-                        <td>
-                            <select id="daysOfWeek" multiple>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dateMin" class="control-label col-md-5">Fecha m&iacute;nima</label>
+                        <div class="col-md-7">
+                            <input type="date" id="dateMin" class="form-control"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-7 col-md-offset-5" id="resultFechaMin">&nbsp;</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dateMax" class="control-label col-md-5">Fecha m&aacute;xima</label>
+                        <div class="col-md-7">
+                            <input type="date" id="dateMax" class="form-control"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-7 col-md-offset-5" id="resultFechaMax">&nbsp;</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="timeMin" class="control-label col-md-5">Hora m&iacute;nima</label>
+                        <div class="col-md-7">
+                            <input type="time" id="timeMin" class="form-control "/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="timeMax" class="control-label col-md-5">Hora m&aacute;xima</label>
+                        <div class="col-md-7">
+                            <input type="time" id="timeMax" class="form-control"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="daysOfWeek" class="control-label col-md-5">D&iacute;a de la semana</label>
+                        <div class="col-md-7">
+                            <select id="daysOfWeek" multiple class="form-control">
                                 <option value="" selected>-- Todos --</option>
                             </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><label for="heatRadius">Radio Calor</label></td>
-                        <td><input type="range" id="heatRadius" min="1" max="200" value="10"/></td>
-                    </tr>
-                    <tr>
-                        <td><label for="maxima">Densidad M&aacute;xima</label></td>
-                        <td>
-                            <input type="number" id="maxima" min="1" max="100" value="1" disabled/>
-                            <input type="checkbox" id="useLocalExtrema" checked onclick="$('#maxima').prop('disabled', this.checked)"/>
-                            <label for="useLocalExtrema">Relativa</label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><label for="limit">L&iacute;mite Records</label></td>
-                        <td><input id="limit" type="number" value="5000" min="1000" max="50000" maxlength="5" step="1000"></td>
-                    </tr>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="heatRadius" class="control-label col-md-5">Radio Calor</label>
+                        <div class="col-md-3">
+                            <input type="range" id="heatRadius" min="1" max="10" value="2" style="width: 6em"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="control-label">
+                                <input type="checkbox" id="scaleRadius" checked />&nbsp;Relativo
+                            </label>
+                        </div>
 
-                    <tr>
-                        <td></td>
-                        <td><button type="button" onclick="updateHeatmap()">Actualizar Mapa!</button></td>
-                    </tr>
+                    </div>
+                    <div class="form-group">
+                        <label for="maxima" class="control-label col-md-5">Densidad M&aacute;xima</label>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" id="maxima" min="1" max="100" value="1" disabled/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="control-label">
+                                <input type="checkbox" id="useLocalExtrema" checked
+                                       onclick="$('#maxima').prop('disabled', this.checked)"/>&nbsp;Relativa
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="limit" class="control-label col-md-5">L&iacute;mite Records</label>
+                        <div class="col-md-6">
+                            <input id="limit" type="number" class="form-control" value="10000" min="5000" max="50000" maxlength="5" step="5000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-5">Incidentes Mostrados</label>
+                        <div class="col-md-6" id="totalIncidents"></div>
+                    </div>
 
-
-                </table>
-
-            </fieldset>
-        </td>
-        <td style="width: 80%">
+                    <div class="form-group">
+                        <div class="col-md-6 col-md-offset-5">
+                            <button type="button" class="btn" onclick="updateHeatmap()">Actualizar Mapa!</button>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+        <div class="col-md-9">
             <div id="map" style="width: 100%; height: 800px;"></div>
-        </td>
-    </tr>
-</table>
+        </div>
+    </div>
+</div>
 </body>
 </html>
