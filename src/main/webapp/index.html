@@ -21,12 +21,12 @@
             BOUNDS: [[18.352687, -66.179752],[18.477284, -65.928097]]
         };
 
-        var cfg = {
+        var DEFAULT_HEATMAP_CONF = {
             maxOpacity: 1,
             blur: 0.85,
-            radius: 1,
+            radius: 15,
             // scales the radius based on map zoom
-            scaleRadius: true,
+            scaleRadius: false,
             // if set to false the heatmap uses the global maximum for colorization
             // if activated: uses the data maximum within the current map boundaries
             //   (there will always be a red spot with useLocalExtremas true)
@@ -127,7 +127,7 @@
                 data: JSON.stringify(criteria),
                 success: function (data) {
 
-                    var newCfg = jQuery.extend({}, cfg);
+                    var newCfg = jQuery.extend({}, DEFAULT_HEATMAP_CONF);
                     newCfg.scaleRadius = !$('#scaleRadius').prop('checked');
                     newCfg.radius = parseInt($('#heatRadius').val()) * (newCfg.scaleRadius && 0.001 || 10);
                     newCfg.useLocalExtrema = $('#useLocalExtrema').prop('checked');
