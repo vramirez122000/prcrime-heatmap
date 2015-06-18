@@ -3,7 +3,7 @@ prcrime-heatmap
 
 Puerto Rico Crime Heatmap
 
-Vease [Demo](http://23.239.18.72:8080/)
+Véase [Demo](http://crimenpr.com/)
 
 Depende de PostGIS. Vease [Esquema](src/sql/create-schema.sql)
 
