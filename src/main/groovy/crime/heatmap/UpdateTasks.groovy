@@ -25,7 +25,11 @@ class UpdateTasks {
         while (count == 1000) {
             LocalDateTime maxDate = incidentDao.getMaxDate()
             count = socrataService.getIncidentsLaterThanDate(maxDate) { Incident incident ->
-                incidentDao.insert(incident)
+                try {
+                    incidentDao.insert(incident)
+                } catch (Exception e) {
+                    e.printStackTrace()
+                }
             }
             println count
         }
