@@ -1,0 +1,14 @@
+version: '2'
+services:
+  db:
+    image: mdillon/postgis:9.5
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: crime_heatmap
+    volumes:
+      - crime-db-data:/var/lib/postgresql/data:rw,z
+
+volumes:
+  crime-db-data:
+    driver: local

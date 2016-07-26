@@ -2,12 +2,13 @@
 <html>
 <head>
     <title>Puerto Rico Crime Heatmap</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+    <link rel="stylesheet" href="https://npmcdn.com/leaflet@0.7.7/dist/leaflet.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
     <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
-    <script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet-src.js"></script>
-    <script type="text/javascript" src="jslib/momentjs/moment.js"></script>
+    <script type="text/javascript" src="https://npmcdn.com/leaflet@0.7.7/dist/leaflet.js"></script>
+    <script type="text/javascript" src="jslib/moment/min/moment-with-locales.min.js"></script>
     <script type="text/javascript" src="jslib/heatmap/build/heatmap.js"></script>
     <script type="text/javascript" src="jslib/heatmap/plugins/leaflet-heatmap.js"></script>
 
@@ -41,22 +42,30 @@
 
         var map;
         var heatmapLayer;
+        var pointLayer;
 
         $(document).ready(function() {
+
+
+            var lang = navigator.languages ? navigator.languages[0] : navigator.language;
+            moment.locale(lang);
+            var longDateFormat = moment().localeData()._longDateFormat['L'];
+            var formattedDate = moment().subtract(1, 'years').format(longDateFormat);
+            console.log(lang + ', '+ longDateFormat + ', ' + formattedDate);
+            $('#dateMin').get().value = formattedDate;
 
             map = L.map('map', {
                 center: DEFAULTS.CENTER,
                 zoom: DEFAULTS.ZOOM
                 });
 
-            var url = 'http://{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png'; //mapquest
+            var url = 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'; //cartodb
             L.tileLayer(url, {
                 minZoom: DEFAULTS.MIN_ZOOM,
                 maxZoom: DEFAULTS.MAX_ZOOM,
                 maxBounds: DEFAULTS.BOUNDS,
-                attribution: 'Tiles courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>, '
-                        + '<a href="http://www.openstreetmap.org/" target="_blank">OpenStreetMap Contributors</a>',
-                subdomains: ['otile1','otile2','otile3','otile4']
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+                '&copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
             }).addTo(map);
 
             $.getJSON('app/tipologia.json', function(data) {
@@ -82,12 +91,12 @@
                 $daysOfWeek.append($option);
             }
 
-            updateHeatmap();
+            updateMapData();
             map.on('viewreset', function() {
-                updateHeatmap();
+                updateMapData();
             });
             map.on('moveend', function() {
-                updateHeatmap();
+                updateMapData();
             });
         });
 
@@ -98,7 +107,7 @@
             }
         }
 
-        function updateHeatmap() {
+        function updateMapData() {
             var bounds = map.getBounds();
             var daysOfWeek = $('#daysOfWeek').val();
             removeEmptyString(daysOfWeek);
@@ -126,6 +135,35 @@
                 method: 'POST',
                 data: JSON.stringify(criteria),
                 success: function (data) {
+
+                    var mapType = $('input[name=mapType]:checked').val();
+
+                    if(mapType != 'HEAT') {
+
+                        if(heatmapLayer && map.hasLayer(heatmapLayer)) {
+                            map.removeLayer(heatmapLayer);
+                        }
+
+                        var newPointLayer = L.geoJson(data, {
+                            onEachFeature: function (feature, layer) {
+                                var popupContent = 'Delito: ' + feature.properties.delito + '<br/>'
+                                        + 'Fecha: ' + feature.properties.fecha + '<br/>'
+                                        + 'Hora: ' + feature.properties.hora + '<br/>';
+                                layer.bindPopup(popupContent);
+                            }
+                        });
+
+                        if(pointLayer) {
+                            map.removeLayer(pointLayer);
+                        }
+                        pointLayer = newPointLayer;
+                        map.addLayer(newPointLayer);
+                        return;
+                    }
+
+                    if(pointLayer && map.hasLayer(pointLayer)) {
+                        map.removeLayer(pointLayer);
+                    }
 
                     var newCfg = jQuery.extend({}, DEFAULT_HEATMAP_CONF);
                     newCfg.scaleRadius = !$('#scaleRadius').prop('checked');
@@ -252,13 +290,19 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-md-5">Incidentes Mostrados</label>
+                        <label class="control-label col-md-5">Incidentes mostrados</label>
                         <div class="col-md-6" id="totalIncidents"></div>
                     </div>
-
+                    <div class="form-group">
+                        <label class="control-label col-md-5">Tipo de mapa</label>
+                        <div class="col-md-6">
+                            <label class="radio-inline"><input name="mapType" type="radio" value="HEAT" checked onchange="updateMapData()"/>Calor</label>
+                            <label class="radio-inline"><input name="mapType" type="radio" value="POINTS" onchange="updateMapData()"/>Puntos</label>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <div class="col-md-6 col-md-offset-5">
-                            <button type="button" class="btn" onclick="updateHeatmap()">Actualizar Mapa!</button>
+                            <button type="button" class="btn" onclick="updateMapData()">Actualizar Mapa!</button>
                         </div>
                     </div>
                 </fieldset>

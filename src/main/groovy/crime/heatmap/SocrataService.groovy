@@ -2,6 +2,8 @@ package crime.heatmap
 
 import com.socrata.api.HttpLowLevel
 import com.socrata.api.Soda2Consumer
+import com.socrata.model.soql.CompositeExpression
+import com.socrata.model.soql.CompositeOperations
 import com.socrata.model.soql.ConditionalExpression
 import com.socrata.model.soql.OrderByClause
 import com.socrata.model.soql.SoqlQuery
@@ -29,14 +31,19 @@ class SocrataService {
 
     private Soda2Consumer consumer = Soda2Consumer.newConsumer("https://data.pr.gov")
 
+    //'https://data.pr.gov/resource/pzaz-tkx9.json';
+
     int getIncidentsLaterThanDate(LocalDateTime maxDate, Closure successHandler) {
 
         //To get a raw String of the results
-        ClientResponse response = consumer.query('incidencia-crime-map',
+        String defaultMaxDate = '1980-01-01 00:00:00'
+        ClientResponse response = consumer.query('pzaz-tkx9.json',
                 HttpLowLevel.JSON_TYPE,
                 new SoqlQuery(
                         null,
-                        maxDate ? new ConditionalExpression("fecha > '${DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(maxDate)}'") : null,
+                        new CompositeExpression(CompositeOperations.AND, Arrays.asList(
+                                new ConditionalExpression("fecha < '${DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now())}'"),
+                                new ConditionalExpression("fecha > '${maxDate ? DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(maxDate) : defaultMaxDate}'") )),
                         null,
                         null,
                         Arrays.asList(new OrderByClause(SortOrder.Ascending, 'fecha')),

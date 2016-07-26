@@ -16,7 +16,8 @@ enum IncidentType {
     BURGLARY(5),
     LARCENY_THEFT(6),
     MOTOR_VEHICLE_THEFT(7),
-    ARSON(8);
+    ARSON(8),
+    OTHER(9);
 
     private int code;
 

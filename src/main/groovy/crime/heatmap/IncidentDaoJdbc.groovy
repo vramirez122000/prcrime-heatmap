@@ -26,7 +26,7 @@ class IncidentDaoJdbc {
     }
 
     FeatureCollection getIncidentsAsGeoJson(IncidentCriteria criteria) {
-        CriteriaQueryBuilder queryBuilder = new CriteriaQueryBuilder('select fecha_incidente, st_asgeojson(location) json from incidencia ')
+        CriteriaQueryBuilder queryBuilder = new CriteriaQueryBuilder('select fecha_incidente, hora_incidente, delito, st_asgeojson(location) json from incidencia ')
         if (criteria.bboxXmax != null && criteria.bboxXmin != null && criteria.bboxYmax != null && criteria.bboxYmin != null) {
             queryBuilder.whereClause('incidencia.location && st_makeenvelope(?, ?, ?, ?)',
                     criteria.bboxXmin,
@@ -78,14 +78,16 @@ class IncidentDaoJdbc {
         sql.eachRow(queryBuilder.sql(), queryBuilder.values(), { row ->
             def f = new Feature()
             f.geometry = objectMapper.readValue((String) row.json, Point.class)
-            f.setProperty('date', ((java.sql.Date)row.fecha_incidente)?.toLocalDate()?.toString())
+            f.setProperty('fecha', ((java.sql.Date)row.fecha_incidente)?.toLocalDate()?.toString())
+            f.setProperty('delito', IncidentType.forCode(row.delito)?.name() )
+            f.setProperty('hora', ((Time)row.hora_incidente)?.toLocalTime()?.toString() )
             featureCollection.add(f)
         })
         return featureCollection
     }
 
     LocalDateTime getMaxDate() {
-        def row = sql.firstRow("SELECT max(tstamp) AS max_date FROM incidencia")
+        def row = sql.firstRow("SELECT max(tstamp) AS max_date FROM incidencia where tstamp < current_timestamp")
         return row.max_date ? ((Timestamp) row.max_date).toLocalDateTime() : null
     }
 

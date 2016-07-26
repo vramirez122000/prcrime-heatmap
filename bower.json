@@ -1,9 +1,9 @@
 {
-    "name": "crime-heatmap",
-    "version": "0.0.1",
-    "dependencies": {
-        "momentjs": "~2.5",
-        "heatmap": "https://github.com/pa7/heatmap.js/archive/v2.0.zip"
-    },
-    "devDependencies": {}
+  "name": "crime-heatmap",
+  "version": "0.0.1",
+  "dependencies": {
+    "heatmap": "https://github.com/pa7/heatmap.js/archive/v2.0.zip",
+    "moment": "^2.14.1"
+  },
+  "devDependencies": {}
 }

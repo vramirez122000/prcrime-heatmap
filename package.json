@@ -1,0 +1,25 @@
+{
+  "name": "crime-heatmap",
+  "version": "1.0.0",
+  "description": "prcrime-heatmap ===============",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vramirez122000/prcrime-heatmap.git"
+  },
+  "author": "",
+  "license": "GPL",
+  "bugs": {
+    "url": "https://github.com/vramirez122000/prcrime-heatmap/issues"
+  },
+  "homepage": "https://github.com/vramirez122000/prcrime-heatmap#readme",
+  "devDependencies": {
+    "bower": "^1.7.9"
+  },
+  "scripts": {
+    "bower": "bower install"
+  }
+}
