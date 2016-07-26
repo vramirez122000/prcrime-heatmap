@@ -51,8 +51,8 @@
             moment.locale(lang);
             var longDateFormat = moment().localeData()._longDateFormat['L'];
             var formattedDate = moment().subtract(1, 'years').format(longDateFormat);
-            console.log(lang + ', '+ longDateFormat + ', ' + formattedDate);
-            $('#dateMin').get().value = formattedDate;
+            $('#dateMin').val(formattedDate);
+            $('#resultFechaMin').text(formattedDate);
 
             map = L.map('map', {
                 center: DEFAULTS.CENTER,
@@ -173,8 +173,8 @@
 
                     var dataSet = [];
                     if(data.features.length > 0) {
-                        $('#resultFechaMin').text(data.features[data.features.length - 1].properties.date);
-                        $('#resultFechaMax').text(data.features[0].properties.date);
+                        $('#resultFechaMin').text(data.features[data.features.length - 1].properties.fecha);
+                        $('#resultFechaMax').text(data.features[0].properties.fecha);
                         $('#totalIncidents').text(data.features.length);
                     }
 
